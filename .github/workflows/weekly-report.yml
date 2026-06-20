@@ -66,8 +66,8 @@ jobs:
           
           # Build message
           days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-          wtr_text = "\n".join(["  {}: {}%".format(day, wtr.get(day, 'N/A')) for day in days])
-          ttr_text = "\n".join(["  {}: {}%".format(day, ttr.get(day, 'N/A')) for day in days])
+          wtr_text = "\n".join(["  {}: {}%".format(day, wtr.get(day, "N/A")) for day in days])
+          ttr_text = "\n".join(["  {}: {}%".format(day, ttr.get(day, "N/A")) for day in days])
           
           message = """SPX WTR/TTR Weekly Report
 
