@@ -1,0 +1,526 @@
+/* Global Styles */
+:root {
+    --color-primary: #2563eb;
+    --color-secondary: #f59e0b;
+    --color-success: #16a34a;
+    --color-warning: #ea580c;
+    --color-danger: #dc2626;
+    --color-neutral: #6b7280;
+    --color-bg: #f9fafb;
+    --color-bg-secondary: #f3f4f6;
+    --color-bg-light: #f9fafb;
+    --color-bg-dark: #f3f4f6;
+    --color-border: #e5e7eb;
+    --color-border-light: #e5e7eb;
+    --color-text: #1f2937;
+    --color-text-light: #6b7280;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+    color: var(--color-primary);
+}
+
+header .subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-light);
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.last-refresh {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+}
+
+/* Sections */
+.section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: 8px;
+}
+
+/* WTR Controls */
+.wtr-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.wtr-controls label {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.wtr-controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: white;
+    cursor: pointer;
+    min-width: 200px;
+}
+
+.wtr-controls select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* WTR Chart */
+.wtr-chart {
+    margin-bottom: 20px;
+}
+
+.chart-placeholder {
+    text-align: center;
+    padding: 40px;
+    background-color: var(--color-bg-secondary);
+    border-radius: 6px;
+    color: var(--color-text-light);
+}
+
+.wtr-bars {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    padding: 20px;
+    background-color: var(--color-bg-secondary);
+    border-radius: 6px;
+    flex-wrap: wrap;
+}
+
+.wtr-bar-container {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+}
+
+.wtr-bar-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    color: var(--color-text);
+}
+
+.wtr-bar {
+    width: 100%;
+    height: 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    transition: transform 0.2s;
+}
+
+.wtr-bar:hover {
+    transform: scale(1.05);
+}
+
+.wtr-bar.green {
+    background-color: var(--color-success);
+}
+
+.wtr-bar.yellow {
+    background-color: #eab308;
+    color: #1f2937;
+}
+
+.wtr-bar.orange {
+    background-color: var(--color-warning);
+}
+
+.wtr-percentage {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+    margin-top: 5px;
+}
+
+/* Help Text */
+.chart-help {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+    font-style: italic;
+}
+
+/* Trade Table */
+.trade-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+.trade-table thead {
+    background-color: var(--color-bg-secondary);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.trade-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.9rem;
+}
+
+.trade-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.95rem;
+}
+
+.trade-table tbody tr:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.signal-go {
+    background-color: rgba(22, 163, 74, 0.1);
+    color: var(--color-success);
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.signal-nogo {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--color-danger);
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Metrics Summary */
+.metrics-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, var(--color-bg-secondary), white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+}
+
+.metric-card h3 {
+    font-size: 1rem;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.metric-values {
+    display: flex;
+    justify-content: space-around;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.metric-value {
+    text-align: center;
+    padding: 4px;
+    flex: 1;
+    min-width: 50px;
+}
+
+.metric-value-label {
+    font-size: 0.7rem;
+    color: var(--color-text-light);
+    font-weight: 600;
+}
+
+.metric-value-number {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-top: 2px;
+}
+
+.metric-value-trend {
+    font-size: 0.9rem;
+    margin-top: 1px;
+    font-weight: bold;
+    cursor: help;
+}
+
+/* Metrics with Rules Layout */
+.metrics-and-rules-layout {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    height: 100%;
+    overflow: hidden;
+}
+
+.metrics-and-ideas-column {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.trading-rules-column {
+    flex: 0 0 280px;
+    overflow-y: auto;
+}
+
+.metrics-summary {
+    flex: 1;
+    min-width: 0;
+}
+
+.trading-rules-box {
+    background: linear-gradient(135deg, var(--color-bg-light), var(--color-bg-dark));
+    border: 2px solid var(--color-primary);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: var(--shadow-md);
+}
+
+.trading-rules-box h3 {
+    font-size: 0.95rem;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.rule {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.rule:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.rule-day {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 3px;
+}
+
+.rule-metric {
+    font-size: 0.75rem;
+    color: var(--color-text);
+    margin-bottom: 2px;
+    padding-left: 6px;
+    border-left: 2px solid var(--color-primary);
+    font-weight: 600;
+}
+
+.rule-trend {
+    font-size: 0.7rem;
+    color: var(--color-secondary);
+    margin-bottom: 2px;
+    padding-left: 6px;
+    font-weight: 600;
+    font-style: italic;
+}
+
+.rule-strategy {
+    font-size: 0.7rem;
+    color: var(--color-text);
+    margin-bottom: 2px;
+    padding-left: 6px;
+    font-weight: 600;
+}
+
+.rule-credit {
+    font-size: 0.7rem;
+    color: var(--color-success);
+    margin-bottom: 2px;
+    padding-left: 6px;
+    font-weight: 600;
+}
+
+.rule-check {
+    font-size: 0.7rem;
+    color: var(--color-text-light);
+    padding-left: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .section {
+        padding: 15px;
+    }
+
+    .wtr-bars {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .wtr-bar-container {
+        min-width: 100%;
+    }
+
+    .trade-table {
+        font-size: 0.8rem;
+    }
+
+    .trade-table th,
+    .trade-table td {
+        padding: 8px;
+    }
+
+    .metrics-and-rules-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .trading-rules-column {
+        flex: 1;
+        width: 100%;
+    }
+
+    .metrics-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .wtr-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .wtr-controls select {
+        width: 100%;
+    }
+}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Crunching - SPX WTR Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SPX Weekly Triumph Rate (WTR) Dashboard</h1>
+            <p class="subtitle">Options Trading Signals for the Coming Week</p>
+        </header>
+
+        <div class="controls">
+            <button id="refreshBtn" class="btn btn-primary">
+                <span id="refreshText">Refresh Data</span>
+                <span id="refreshSpinner" class="spinner" style="display: none;"></span>
+            </button>
+            <span id="lastRefresh" class="last-refresh"></span>
+        </div>
+
+        <!-- WTR Summary Section -->
+        <section class="section">
+            <h2>WTR & TTR Metrics (Last 2 Months)</h2>
+            <div id="metricsDisplay" class="metrics-summary">
+                <div class="metric-card">
+                    <h3>Latest WTR</h3>
+                    <div id="wtrValues" class="metric-values"></div>
+                </div>
+                <div class="metric-card">
+                    <h3>Latest TTR</h3>
+                    <div id="ttrValues" class="metric-values"></div>
+                </div>
+            </div>
+            <p class="chart-help">
+                <strong>WTR %</strong> = % of times SPX closed higher 7 days later for each weekday (past 2 months).
+                <strong>TTR %</strong> = % of times SPX closed higher next day for each weekday (past 2 months).
+            </p>
+        </section>
+
+        <!-- Trade Ideas Section -->
+        <section class="section">
+            <h2>Upcoming Trade Ideas - <span id="upcomingWeekDisplay">This Week</span></h2>
+            <table id="tradeIdeasTable" class="trade-table">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Strategy</th>
+                        <th>Entry Time</th>
+                        <th>Expiration</th>
+                        <th>Credit Target</th>
+                        <th>SMA Check</th>
+                        <th>WTR/TTR</th>
+                        <th>Signal</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 20px;">Loading trade ideas...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="chart-help">
+                Trade ideas are generated based on your 4 SPX options strategies.
+                A "Go" signal means the WTR/TTR threshold is met; still requires SMA confirmation at entry time.
+            </p>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

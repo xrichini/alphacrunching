@@ -1,0 +1,10 @@
+[project]
+name = "alphacrunching"
+version = "0.1.0"
+description = "SPX Weekly Triumph Rate (WTR) dashboard for options trading signals"
+requires-python = ">=3.9"
+dependencies = [
+    "flask>=2.3.0",
+    "yfinance>=0.2.28",
+    "pandas>=2.0.0",
+]
