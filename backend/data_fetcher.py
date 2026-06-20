@@ -16,7 +16,7 @@ def fetch_spx_data(lookback_days: int = 120) -> pd.DataFrame:
         lookback_days: Number of trading days to fetch (default 120 ≈ 4 months)
     
     Returns:
-        DataFrame with columns: Close, Open, High, Low, Volume (and Date as index)
+        DataFrame with columns: date, open, high, low, close, volume (all lowercase)
     """
     end_date = datetime.now()
     start_date = end_date - timedelta(days=int(lookback_days * 1.3))  # Buffer for weekends/holidays
@@ -26,22 +26,25 @@ def fetch_spx_data(lookback_days: int = 120) -> pd.DataFrame:
     # Download SPX data
     spx = yf.download("^GSPC", start=start_date, end=end_date, progress=False)
     
+    # Reset index to make Date a column
+    spx = spx.reset_index()
+    
     # Handle multi-index columns from yfinance
     if isinstance(spx.columns, pd.MultiIndex):
         spx.columns = spx.columns.get_level_values(0)
     
-    # Rename columns to proper case
-    spx.columns = spx.columns.str.capitalize()
+    # Rename all columns to lowercase for consistency
+    spx.columns = spx.columns.str.lower()
+    spx.rename(columns={"date": "date"}, inplace=True)
     
     # Keep only trading days (non-null close data)
-    spx = spx.dropna(subset=["Close"])
+    spx = spx.dropna(subset=["close"])
     
     # Keep only the last `lookback_days` trading days
     spx = spx.tail(lookback_days)
     
-    # Ensure index is datetime
-    spx.index = pd.to_datetime(spx.index)
-    spx.index.name = "Date"
+    # Ensure date is datetime
+    spx["date"] = pd.to_datetime(spx["date"])
     
     print(f"Downloaded {len(spx)} trading days of SPX data")
     return spx
