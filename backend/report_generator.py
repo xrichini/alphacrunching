@@ -285,12 +285,12 @@ def generate_text_report(metrics):
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
     
     wtr_text = "\n".join([
-        f"  {day}: {wtr.get(day, 'N/A')}%"
+        f"  {day}: {wtr.get(day.lower(), 'N/A')}%"
         for day in days
     ])
     
     ttr_text = "\n".join([
-        f"  {day}: {ttr.get(day, 'N/A')}%"
+        f"  {day}: {ttr.get(day.lower(), 'N/A')}%"
         for day in days
     ])
     
