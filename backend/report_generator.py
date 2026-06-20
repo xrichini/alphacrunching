@@ -23,24 +23,44 @@ from metrics_calculator import (
 
 def compute_and_save_metrics():
     """Compute WTR/TTR metrics from scratch and save to files"""
-    print("Computing WTR/TTR metrics from yfinance...")
-    spx_df = fetch_spx_data(lookback_days=120)
-    wtr = calculate_wtr(spx_df)
-    ttr = calculate_ttr(spx_df)
-    wtr_weekly = calculate_wtr_weekly_history(spx_df)
-    ttr_weekly = calculate_ttr_weekly_history(spx_df)
-    
-    print("Saving metrics to JSON files...")
-    save_metrics(wtr, ttr, {})
-    save_wtr_weekly_history(wtr_weekly)
-    save_ttr_weekly_history(ttr_weekly)
-    
-    return {
-        "wtr": wtr,
-        "ttr": ttr,
-        "wtr_weekly": wtr_weekly,
-        "ttr_weekly": ttr_weekly,
-    }
+    try:
+        print("[COMPUTE] Fetching SPX data from yfinance (120 days lookback)...")
+        spx_df = fetch_spx_data(lookback_days=120)
+        print(f"[COMPUTE] Got {len(spx_df)} SPX records")
+        
+        print("[COMPUTE] Calculating WTR...")
+        wtr = calculate_wtr(spx_df)
+        print(f"[COMPUTE] WTR: {wtr}")
+        
+        print("[COMPUTE] Calculating TTR...")
+        ttr = calculate_ttr(spx_df)
+        print(f"[COMPUTE] TTR: {ttr}")
+        
+        print("[COMPUTE] Calculating WTR weekly history...")
+        wtr_weekly = calculate_wtr_weekly_history(spx_df)
+        print(f"[COMPUTE] WTR weekly: {wtr_weekly}")
+        
+        print("[COMPUTE] Calculating TTR weekly history...")
+        ttr_weekly = calculate_ttr_weekly_history(spx_df)
+        print(f"[COMPUTE] TTR weekly: {ttr_weekly}")
+        
+        print("[COMPUTE] Saving metrics to JSON files...")
+        save_metrics(wtr, ttr, {})
+        save_wtr_weekly_history(wtr_weekly)
+        save_ttr_weekly_history(ttr_weekly)
+        print("[COMPUTE] Metrics saved!")
+        
+        return {
+            "wtr": wtr,
+            "ttr": ttr,
+            "wtr_weekly": wtr_weekly,
+            "ttr_weekly": ttr_weekly,
+        }
+    except Exception as e:
+        print(f"[COMPUTE] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 
 def load_metrics():
@@ -308,17 +328,30 @@ def save_report(html_content, output_path):
 
 
 if __name__ == "__main__":
-    metrics = load_metrics()
-    if metrics:
-        html = generate_html_report(metrics)
-        text = generate_text_report(metrics)
-        
-        # Save HTML
-        project_root = Path(__file__).parent.parent
-        output_path = project_root / "docs" / "report.html"
-        save_report(html, output_path)
-        
-        print("✅ Report generated successfully!")
-        print(f"📄 HTML Report: {output_path}")
-    else:
-        print("❌ Could not load metrics data")
+    print("[REPORT] Starting report generation...")
+    print(f"[REPORT] Working directory: {Path.cwd()}")
+    
+    try:
+        metrics = load_metrics()
+        if metrics:
+            print(f"[REPORT] Metrics loaded successfully!")
+            print(f"[REPORT] WTR data: {metrics.get('wtr')}")
+            print(f"[REPORT] TTR data: {metrics.get('ttr')}")
+            
+            html = generate_html_report(metrics)
+            text = generate_text_report(metrics)
+            
+            # Save HTML
+            project_root = Path(__file__).parent.parent
+            output_path = project_root / "docs" / "report.html"
+            save_report(html, output_path)
+            
+            print("[REPORT] HTML report generated successfully!")
+            print(f"[REPORT] HTML Report saved to: {output_path}")
+            print(f"[REPORT] Telegram text:\n{text}")
+        else:
+            print("[REPORT] ERROR: Could not load metrics data")
+    except Exception as e:
+        print(f"[REPORT] EXCEPTION: {e}")
+        import traceback
+        traceback.print_exc()
