@@ -69,19 +69,19 @@ jobs:
           
           # Build message
           days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-          wtr_text = "\n".join([f"  {day}: {wtr.get(day, 'N/A')}%" for day in days])
-          ttr_text = "\n".join([f"  {day}: {ttr.get(day, 'N/A')}%" for day in days])
+          wtr_text = "\n".join(["  {}: {}%".format(day, wtr.get(day, 'N/A')) for day in days])
+          ttr_text = "\n".join(["  {}: {}%".format(day, ttr.get(day, 'N/A')) for day in days])
           
-          message = f"""📊 *SPX WTR/TTR Weekly Report*
+          message = """📊 *SPX WTR/TTR Weekly Report*
 
 📈 *Weekly Triumph Rate (WTR)*
-{wtr_text}
+{}
 
 ⏭️ *Tomorrow's Triumph Rate (TTR)*
-{ttr_text}
+{}
 
 📊 *Full Report*:
-https://xrichini.github.io/alphacrunching/report.html"""
+https://xrichini.github.io/alphacrunching/report.html""".format(wtr_text, ttr_text)
           
           # Send Telegram message
           url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
