@@ -69,15 +69,15 @@ jobs:
           wtr_text = "\n".join(["  {}: {}%".format(day, wtr.get(day, 'N/A')) for day in days])
           ttr_text = "\n".join(["  {}: {}%".format(day, ttr.get(day, 'N/A')) for day in days])
           
-          message = """📊 *SPX WTR/TTR Weekly Report*
+          message = """SPX WTR/TTR Weekly Report
 
-📈 *Weekly Triumph Rate (WTR)*
+Weekly Triumph Rate (WTR)
 {}
 
-⏭️ *Tomorrow's Triumph Rate (TTR)*
+Tomorrow's Triumph Rate (TTR)
 {}
 
-📊 *Full Report*:
+Full Report:
 https://xrichini.github.io/alphacrunching/""".format(wtr_text, ttr_text)
           
           # Send Telegram message
