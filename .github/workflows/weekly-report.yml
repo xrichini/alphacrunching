@@ -34,6 +34,12 @@ jobs:
         run: |
           python backend/report_generator.py
 
+      - name: Verify report generated
+        run: |
+          echo "[WORKFLOW] Checking report.html..."
+          ls -lh docs/report.html
+          head -20 docs/report.html | grep "timestamp"
+
       - name: Prepare Pages artifact
         run: |
           mkdir -p pages
