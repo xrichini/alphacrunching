@@ -6,11 +6,6 @@ on:
     - cron: '0 18 * * 0'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
   generate-report:
     runs-on: ubuntu-latest
@@ -33,34 +28,30 @@ jobs:
         run: |
           python backend/report_generator.py
       
-      - name: Prepare Pages artifact
+      - name: Commit and push report
         run: |
-          mkdir -p pages
-          cp docs/report.html pages/index.html
-      
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: pages
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add docs/report.html
+            git commit -m "chore(report): update weekly WTR/TTR report"
+            git push
+            echo "REPORT_PUSHED=true" >> $GITHUB_ENV
+          else
+            echo "REPORT_PUSHED=false" >> $GITHUB_ENV
+          fi
       
       - name: Send to Telegram
-        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' }}
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        if: env.REPORT_PUSHED == 'true'
         run: |
           python << 'EOF'
           import requests
           from pathlib import Path
           import json
-          import os
           
-          bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-          chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
-          
-          if not bot_token or not chat_id:
-              print("⚠️  Telegram secrets not configured")
-              exit(0)
+          bot_token = "${{ secrets.TELEGRAM_BOT_TOKEN }}"
+          chat_id = "${{ secrets.TELEGRAM_CHAT_ID }}"
           
           # Read metrics to create message
           data_dir = Path("data")
@@ -103,18 +94,3 @@ https://xrichini.github.io/alphacrunching/""".format(wtr_text, ttr_text)
           else:
               print("❌ Failed to send message: {}".format(response.status_code))
           EOF
-
-  deploy-pages:
-    runs-on: ubuntu-latest
-    needs: generate-report
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
