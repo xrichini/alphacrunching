@@ -222,12 +222,12 @@ def generate_html_report(metrics):
 </head>
 <body>
     <div class="container">
-        <h1>📊 SPX WTR/TTR Weekly Report</h1>
+        <h1>[REPORT] SPX WTR/TTR Weekly Report</h1>
         <div class="timestamp">Generated on {datetime.now().strftime('%A, %B %d, %Y at %H:%M UTC')}</div>
         
         <div class="metrics-grid">
             <div class="metric-card">
-                <h2><span class="metric-icon">📈</span> Weekly Triumph Rate (WTR)</h2>
+                <h2><span class="metric-icon">[UP]</span> Weekly Triumph Rate (WTR)</h2>
                 <p style="color: #718096; margin-bottom: 12px; font-size: 0.9rem;">% of times SPX closed higher 7 days later</p>
                 <table>
                     <thead>
@@ -298,10 +298,10 @@ def generate_text_report(metrics):
         for day in days
     ])
     
-    report = f"""📊 *SPX WTR/TTR Weekly Report*
+    report = f"""[REPORT] *SPX WTR/TTR Weekly Report*
 Generated: {datetime.now().strftime('%A, %B %d, %Y')}
 
-📈 *Weekly Triumph Rate (WTR)*
+[UP] *Weekly Triumph Rate (WTR)*
 _% of times SPX closed higher 7 days later_
 {wtr_text}
 
@@ -316,7 +316,7 @@ _% of times SPX closed higher next day_
 
 📌 All strategies: ATM Bull Put Spreads with $2.00+ credit targets
 
-📊 Full Dashboard:
+[REPORT] Full Dashboard:
 https://xrichini.github.io/alphacrunching/"""
     
     return report
