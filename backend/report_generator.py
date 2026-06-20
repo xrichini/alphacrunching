@@ -323,10 +323,10 @@ https://xrichini.github.io/alphacrunching/"""
 
 
 def save_report(html_content, output_path):
-    """Save HTML report to file"""
+    """Save HTML report to file with UTF-8 encoding"""
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
     print(f"Report saved to {output_path}")
 
