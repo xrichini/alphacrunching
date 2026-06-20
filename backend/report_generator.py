@@ -27,8 +27,10 @@ def compute_and_save_metrics():
         print("[COMPUTE] Fetching SPX data from yfinance (120 days lookback)...")
         spx_df = fetch_spx_data(lookback_days=120)
         print(f"[COMPUTE] Got {len(spx_df)} SPX records")
-        print(f"[COMPUTE] Date range: {spx_df.index.min()} to {spx_df.index.max()}")
-        print(f"[COMPUTE] Last 3 close prices: {spx_df['Close'].tail(3).to_dict()}")
+        print(f"[COMPUTE] DataFrame columns: {spx_df.columns.tolist()}")
+        print(f"[COMPUTE] DataFrame index: {spx_df.index[:3].tolist()} ... {spx_df.index[-3:].tolist()}")
+        print(f"[COMPUTE] DataFrame shape: {spx_df.shape}")
+        print(f"[COMPUTE] First row: {spx_df.iloc[0].to_dict() if len(spx_df) > 0 else 'empty'}")
         
         print("[COMPUTE] Calculating WTR...")
         wtr = calculate_wtr(spx_df)
@@ -341,7 +343,7 @@ if __name__ == "__main__":
             print("[MAIN] ERROR: Failed to compute metrics")
             sys.exit(1)
         
-        print(f"[MAIN] ✅ Metrics computed successfully!")
+        print(f"[MAIN] [OK] Metrics computed successfully!")
         print(f"[MAIN]   WTR: {metrics.get('wtr')}")
         print(f"[MAIN]   TTR: {metrics.get('ttr')}")
         
@@ -365,7 +367,7 @@ if __name__ == "__main__":
         output_path = project_root / "docs" / "report.html"
         save_report(html, output_path)
         
-        print(f"[MAIN] ✅ HTML report saved to: {output_path}")
+        print(f"[MAIN] [OK] HTML report saved to: {output_path}")
         print(f"[MAIN] Report timestamp: {datetime.now().strftime('%A, %B %d, %Y at %H:%M UTC')}")
         
         # STEP 5: Display Telegram message for verification
@@ -374,10 +376,10 @@ if __name__ == "__main__":
         print(text)
         print("=" * 60)
         
-        print("\n[MAIN] ✅ Report generation workflow completed successfully!")
+        print("\n[MAIN] [OK] Report generation workflow completed successfully!")
         
     except Exception as e:
-        print(f"\n[MAIN] ❌ EXCEPTION: {e}")
+        print(f"\n[MAIN] [ERROR] EXCEPTION: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
