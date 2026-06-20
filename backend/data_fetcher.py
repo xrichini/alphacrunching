@@ -2,6 +2,7 @@
 Data fetcher module for SPX historical data using yfinance.
 """
 import json
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import pandas as pd
@@ -17,8 +18,22 @@ def fetch_spx_data(lookback_days: int = 120) -> pd.DataFrame:
     
     Returns:
         DataFrame with columns: date, open, high, low, close, volume (all lowercase)
+    
+    Note:
+        Uses DATA_END_DATE environment variable (YYYY-MM-DD) if set, otherwise uses today.
+        This ensures reproducible results across different execution times.
     """
-    end_date = datetime.now()
+    # Allow overriding end_date via environment variable (e.g., for GitHub Actions consistency)
+    end_date_str = os.environ.get("DATA_END_DATE")
+    if end_date_str:
+        try:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+        except ValueError:
+            print(f"[WARN] Invalid DATA_END_DATE format '{end_date_str}', using today")
+            end_date = datetime.now()
+    else:
+        end_date = datetime.now()
+    
     start_date = end_date - timedelta(days=int(lookback_days * 1.3))  # Buffer for weekends/holidays
     
     print(f"Fetching SPX data from {start_date.date()} to {end_date.date()}...")

@@ -20,6 +20,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Calculate last trading day
+        id: trading_day
+        run: |
+          # Calculate last trading day for consistent data across runs
+          # Sunday 18 UTC = Saturday 2 PM ET (before Monday trading day)
+          # So use Friday as the last trading day
+          TODAY=$(date -d '0 days' +%u)  # 1=Mon, 7=Sun
+          if [ $TODAY -eq 7 ]; then
+            # Sunday: use Friday (2 days ago)
+            LAST_TRADING_DAY=$(date -d '-2 days' +%Y-%m-%d)
+          elif [ $TODAY -eq 6 ]; then
+            # Saturday: use Friday (1 day ago)
+            LAST_TRADING_DAY=$(date -d '-1 days' +%Y-%m-%d)
+          else
+            # Weekday: use yesterday (market closed)
+            LAST_TRADING_DAY=$(date -d '-1 days' +%Y-%m-%d)
+          fi
+          echo "last_trading_day=$LAST_TRADING_DAY" >> $GITHUB_OUTPUT
+          echo "Using last trading day: $LAST_TRADING_DAY"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -31,7 +51,10 @@ jobs:
           pip install yfinance requests
 
       - name: Generate report
+        env:
+          DATA_END_DATE: ${{ steps.trading_day.outputs.last_trading_day }}
         run: |
+          echo "DATA_END_DATE set to: $DATA_END_DATE"
           python backend/report_generator.py
 
       - name: Prepare Pages artifact
