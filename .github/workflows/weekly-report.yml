@@ -4,7 +4,12 @@ on:
   schedule:
     # Every Sunday at 6 PM UTC (18:00)
     - cron: '0 18 * * 0'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   generate-report:
@@ -13,8 +18,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -30,31 +33,34 @@ jobs:
         run: |
           python backend/report_generator.py
       
-      - name: Commit and push report
+      - name: Prepare Pages artifact
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-          
-          # Check if there are changes to commit
-          if [ -n "$(git status --porcelain)" ]; then
-            git add docs/report.html
-            git commit -m "chore(report): update weekly WTR/TTR report"
-            git push
-            echo "REPORT_PUSHED=true" >> $GITHUB_ENV
-          else
-            echo "REPORT_PUSHED=false" >> $GITHUB_ENV
-          fi
+          mkdir -p pages
+          cp docs/report.html pages/index.html
+      
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
       
       - name: Send to Telegram
-        if: env.REPORT_PUSHED == 'true'
+        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python << 'EOF'
           import requests
           from pathlib import Path
           import json
+          import os
           
-          bot_token = "${{ secrets.TELEGRAM_BOT_TOKEN }}"
-          chat_id = "${{ secrets.TELEGRAM_CHAT_ID }}"
+          bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+          chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+          
+          if not bot_token or not chat_id:
+              print("⚠️  Telegram secrets not configured")
+              exit(0)
           
           # Read metrics to create message
           data_dir = Path("data")
@@ -81,10 +87,10 @@ jobs:
 {}
 
 📊 *Full Report*:
-https://xrichini.github.io/alphacrunching/report.html""".format(wtr_text, ttr_text)
+https://xrichini.github.io/alphacrunching/""".format(wtr_text, ttr_text)
           
           # Send Telegram message
-          url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+          url = "https://api.telegram.org/bot{}/sendMessage".format(bot_token)
           payload = {
               "chat_id": chat_id,
               "text": message,
@@ -95,11 +101,20 @@ https://xrichini.github.io/alphacrunching/report.html""".format(wtr_text, ttr_te
           if response.status_code == 200:
               print("✅ Message sent to Telegram")
           else:
-              print(f"❌ Failed to send message: {response.status_code}")
+              print("❌ Failed to send message: {}".format(response.status_code))
           EOF
-      
-      - name: Report status
-        if: always()
-        run: |
-          echo "✅ Workflow completed"
-          echo "Report URL: https://xrichini.github.io/alphacrunching/report.html"
+
+  deploy-pages:
+    runs-on: ubuntu-latest
+    needs: generate-report
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
