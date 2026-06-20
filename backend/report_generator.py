@@ -27,6 +27,8 @@ def compute_and_save_metrics():
         print("[COMPUTE] Fetching SPX data from yfinance (120 days lookback)...")
         spx_df = fetch_spx_data(lookback_days=120)
         print(f"[COMPUTE] Got {len(spx_df)} SPX records")
+        print(f"[COMPUTE] Date range: {spx_df.index.min()} to {spx_df.index.max()}")
+        print(f"[COMPUTE] Last 3 close prices: {spx_df['Close'].tail(3).to_dict()}")
         
         print("[COMPUTE] Calculating WTR...")
         wtr = calculate_wtr(spx_df)
