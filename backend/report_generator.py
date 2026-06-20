@@ -336,14 +336,14 @@ if __name__ == "__main__":
     print(f"[MAIN] Working directory: {Path.cwd()}")
     
     try:
-        # STEP 1: Compute fresh metrics from yfinance
-        print("\n[MAIN] STEP 1: Computing metrics from fresh SPX data...")
-        metrics = compute_and_save_metrics()
+        # STEP 1: Load metrics from cache (or compute if missing)
+        print("\n[MAIN] STEP 1: Loading metrics from cache or computing fresh...")
+        metrics = load_metrics()
         if not metrics:
-            print("[MAIN] ERROR: Failed to compute metrics")
+            print("[MAIN] ERROR: Failed to load/compute metrics")
             sys.exit(1)
         
-        print(f"[MAIN] [OK] Metrics computed successfully!")
+        print(f"[MAIN] [OK] Metrics loaded successfully!")
         print(f"[MAIN]   WTR: {metrics.get('wtr')}")
         print(f"[MAIN]   TTR: {metrics.get('ttr')}")
         
