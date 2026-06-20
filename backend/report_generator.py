@@ -2,32 +2,75 @@
 Generate weekly WTR/TTR report as HTML and return report data
 """
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
+# Add backend to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
 
-def load_metrics():
-    """Load WTR/TTR data from JSON files"""
-    data_dir = Path(__file__).parent.parent / "data"
+from data_fetcher import fetch_spx_data
+from metrics_calculator import (
+    calculate_wtr,
+    calculate_ttr,
+    calculate_wtr_weekly_history,
+    calculate_ttr_weekly_history,
+    save_metrics,
+    save_wtr_weekly_history,
+    save_ttr_weekly_history,
+)
+
+
+def compute_and_save_metrics():
+    """Compute WTR/TTR metrics from scratch and save to files"""
+    print("Computing WTR/TTR metrics from yfinance...")
+    spx_df = fetch_spx_data(lookback_days=120)
+    wtr = calculate_wtr(spx_df)
+    ttr = calculate_ttr(spx_df)
+    wtr_weekly = calculate_wtr_weekly_history(spx_df)
+    ttr_weekly = calculate_ttr_weekly_history(spx_df)
     
-    try:
-        with open(data_dir / "wtr_history.json") as f:
-            wtr_data = json.load(f)
-        with open(data_dir / "ttr_history.json") as f:
-            ttr_data = json.load(f)
-        with open(data_dir / "wtr_weekly_history.json") as f:
-            wtr_weekly = json.load(f)
-        with open(data_dir / "ttr_weekly_history.json") as f:
-            ttr_weekly = json.load(f)
-    except FileNotFoundError:
-        return None
+    print("Saving metrics to JSON files...")
+    save_metrics(wtr, ttr, {})
+    save_wtr_weekly_history(wtr_weekly)
+    save_ttr_weekly_history(ttr_weekly)
     
     return {
-        "wtr": wtr_data,
-        "ttr": ttr_data,
+        "wtr": wtr,
+        "ttr": ttr,
         "wtr_weekly": wtr_weekly,
         "ttr_weekly": ttr_weekly,
     }
+
+
+def load_metrics():
+    """Load WTR/TTR data from JSON files or compute if missing"""
+    data_dir = Path(__file__).parent.parent / "data"
+    
+    wtr_file = data_dir / "wtr_history.json"
+    ttr_file = data_dir / "ttr_history.json"
+    wtr_weekly_file = data_dir / "wtr_weekly_history.json"
+    ttr_weekly_file = data_dir / "ttr_weekly_history.json"
+    
+    # If all files exist, load them
+    if all(f.exists() for f in [wtr_file, ttr_file, wtr_weekly_file, ttr_weekly_file]):
+        with open(wtr_file) as f:
+            wtr_data = json.load(f)
+        with open(ttr_file) as f:
+            ttr_data = json.load(f)
+        with open(wtr_weekly_file) as f:
+            wtr_weekly = json.load(f)
+        with open(ttr_weekly_file) as f:
+            ttr_weekly = json.load(f)
+        return {
+            "wtr": wtr_data,
+            "ttr": ttr_data,
+            "wtr_weekly": wtr_weekly,
+            "ttr_weekly": ttr_weekly,
+        }
+    
+    # Otherwise compute from scratch
+    return compute_and_save_metrics()
 
 
 def generate_html_report(metrics):
