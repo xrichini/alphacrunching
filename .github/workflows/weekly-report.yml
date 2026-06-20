@@ -1,96 +1,80 @@
 name: Weekly WTR/TTR Report
 
 on:
+  workflow_dispatch:
   schedule:
     # Every Sunday at 6 PM UTC (18:00)
     - cron: '0 18 * * 0'
-  workflow_dispatch:
 
 jobs:
   generate-report:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install yfinance requests
-      
+
       - name: Generate report
         run: |
           python backend/report_generator.py
-      
-      - name: Commit and push report
+
+      - name: Prepare Pages artifact
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-          
-          if [ -n "$(git status --porcelain)" ]; then
-            git add docs/report.html
-            git commit -m "chore(report): update weekly WTR/TTR report"
-            git push
-            echo "REPORT_PUSHED=true" >> $GITHUB_ENV
-          else
-            echo "REPORT_PUSHED=false" >> $GITHUB_ENV
-          fi
-      
-      - name: Send to Telegram
-        if: env.REPORT_PUSHED == 'true'
+          mkdir -p pages
+          cp docs/report.html pages/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+
+      - name: Notify Telegram (optional)
+        if: ${{ env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
         run: |
-          python << 'EOF'
-          import requests
-          from pathlib import Path
+          WTR=$(python -c "
           import json
-          
-          bot_token = "${{ secrets.TELEGRAM_BOT_TOKEN }}"
-          chat_id = "${{ secrets.TELEGRAM_CHAT_ID }}"
-          
-          # Read metrics to create message
-          data_dir = Path("data")
+          from pathlib import Path
           try:
-              with open(data_dir / "wtr_history.json") as f:
-                  wtr = json.load(f)
-              with open(data_dir / "ttr_history.json") as f:
-                  ttr = json.load(f)
+              with open('data/wtr_history.json') as f:
+                  data = json.load(f)
+                  monday = data.get('Monday', 'N/A')
+                  print(f'Monday: {monday}%')
           except:
-              wtr = {}
-              ttr = {}
-          
-          # Build message
-          days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-          wtr_text = "\n".join(["  {}: {}%".format(day, wtr.get(day, "N/A")) for day in days])
-          ttr_text = "\n".join(["  {}: {}%".format(day, ttr.get(day, "N/A")) for day in days])
-          
-          message = """SPX WTR/TTR Weekly Report
+              print('N/A')
+          " 2>/dev/null || echo "N/A")
+          DATE=$(date -u '+%Y-%m-%d %H:%M UTC')
+          MSG="$(printf 'SPX WTR/TTR Weekly Report\n%s\n%s\nhttps://xrichini.github.io/alphacrunching/' "$DATE" "$WTR")"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d parse_mode="Markdown" \
+            --data-urlencode "text=${MSG}"
 
-Weekly Triumph Rate (WTR)
-{}
-
-Tomorrow's Triumph Rate (TTR)
-{}
-
-Full Report:
-https://xrichini.github.io/alphacrunching/""".format(wtr_text, ttr_text)
-          
-          # Send Telegram message
-          url = "https://api.telegram.org/bot{}/sendMessage".format(bot_token)
-          payload = {
-              "chat_id": chat_id,
-              "text": message,
-              "parse_mode": "Markdown"
-          }
-          
-          response = requests.post(url, json=payload)
-          if response.status_code == 200:
-              print("[SUCCESS] Message sent to Telegram")
-          else:
-              print("[ERROR] Failed to send message: {}".format(response.status_code))
-          EOF
+  deploy-pages:
+    runs-on: ubuntu-latest
+    needs: generate-report
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
