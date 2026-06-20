@@ -103,14 +103,14 @@ def generate_html_report(metrics):
     
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
     
-    # Build table rows
+    # Build table rows - convert day names to lowercase for JSON key lookup
     wtr_rows = "\n".join([
-        f"<tr><td>{day}</td><td>{wtr.get(day, 'N/A')}%</td></tr>"
+        f"<tr><td>{day}</td><td>{wtr.get(day.lower(), 'N/A')}%</td></tr>"
         for day in days
     ])
     
     ttr_rows = "\n".join([
-        f"<tr><td>{day}</td><td>{ttr.get(day, 'N/A')}%</td></tr>"
+        f"<tr><td>{day}</td><td>{ttr.get(day.lower(), 'N/A')}%</td></tr>"
         for day in days
     ])
     
@@ -328,30 +328,54 @@ def save_report(html_content, output_path):
 
 
 if __name__ == "__main__":
-    print("[REPORT] Starting report generation...")
-    print(f"[REPORT] Working directory: {Path.cwd()}")
+    print("[MAIN] Starting WTR/TTR report generation workflow...")
+    print(f"[MAIN] Working directory: {Path.cwd()}")
     
     try:
-        metrics = load_metrics()
-        if metrics:
-            print(f"[REPORT] Metrics loaded successfully!")
-            print(f"[REPORT] WTR data: {metrics.get('wtr')}")
-            print(f"[REPORT] TTR data: {metrics.get('ttr')}")
-            
-            html = generate_html_report(metrics)
-            text = generate_text_report(metrics)
-            
-            # Save HTML
-            project_root = Path(__file__).parent.parent
-            output_path = project_root / "docs" / "report.html"
-            save_report(html, output_path)
-            
-            print("[REPORT] HTML report generated successfully!")
-            print(f"[REPORT] HTML Report saved to: {output_path}")
-            print(f"[REPORT] Telegram text:\n{text}")
-        else:
-            print("[REPORT] ERROR: Could not load metrics data")
+        # STEP 1: Compute fresh metrics from yfinance
+        print("\n[MAIN] STEP 1: Computing metrics from fresh SPX data...")
+        metrics = compute_and_save_metrics()
+        if not metrics:
+            print("[MAIN] ERROR: Failed to compute metrics")
+            sys.exit(1)
+        
+        print(f"[MAIN] ✅ Metrics computed successfully!")
+        print(f"[MAIN]   WTR: {metrics.get('wtr')}")
+        print(f"[MAIN]   TTR: {metrics.get('ttr')}")
+        
+        # STEP 2: Generate HTML report
+        print("\n[MAIN] STEP 2: Generating HTML report...")
+        html = generate_html_report(metrics)
+        if not html:
+            print("[MAIN] ERROR: Failed to generate HTML")
+            sys.exit(1)
+        
+        # STEP 3: Generate Telegram text
+        print("[MAIN] STEP 3: Generating Telegram message...")
+        text = generate_text_report(metrics)
+        if not text:
+            print("[MAIN] ERROR: Failed to generate text")
+            sys.exit(1)
+        
+        # STEP 4: Save HTML report to docs/
+        print("[MAIN] STEP 4: Saving HTML report...")
+        project_root = Path(__file__).parent.parent
+        output_path = project_root / "docs" / "report.html"
+        save_report(html, output_path)
+        
+        print(f"[MAIN] ✅ HTML report saved to: {output_path}")
+        print(f"[MAIN] Report timestamp: {datetime.now().strftime('%A, %B %d, %Y at %H:%M UTC')}")
+        
+        # STEP 5: Display Telegram message for verification
+        print("\n[MAIN] STEP 5: Telegram message (for workflow logs):")
+        print("=" * 60)
+        print(text)
+        print("=" * 60)
+        
+        print("\n[MAIN] ✅ Report generation workflow completed successfully!")
+        
     except Exception as e:
-        print(f"[REPORT] EXCEPTION: {e}")
+        print(f"\n[MAIN] ❌ EXCEPTION: {e}")
         import traceback
         traceback.print_exc()
+        sys.exit(1)

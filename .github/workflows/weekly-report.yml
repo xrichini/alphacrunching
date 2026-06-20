@@ -59,7 +59,7 @@ jobs:
           try:
               with open('data/wtr_history.json') as f:
                   data = json.load(f)
-                  monday = data.get('Monday', 'N/A')
+                  monday = data.get('monday', 'N/A')
                   print(f'Monday: {monday}%')
           except:
               print('N/A')
