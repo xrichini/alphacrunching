@@ -219,6 +219,94 @@ async function handleRefresh() {
  */
 refreshBtn.addEventListener('click', handleRefresh);
 
+// TTR History Modal - Get elements
+const ttrModal = document.getElementById('ttrModal');
+const showTtrBtn = document.getElementById('showTtrBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const closeTtrBtn = document.getElementById('closeTtrBtn');
+const ttrTableBody = document.getElementById('ttrTableBody');
+
+let ttrHistoryData = {};
+
+/**
+ * Open TTR History Modal
+ */
+function openTtrModal() {
+    ttrModal.classList.add('show');
+    loadTtrHistory();
+}
+
+/**
+ * Close TTR History Modal
+ */
+function closeTtrModal() {
+    ttrModal.classList.remove('show');
+}
+
+/**
+ * Load TTR History from API (read-only)
+ */
+async function loadTtrHistory() {
+    try {
+        const response = await fetch(`${API_BASE}/ttr-history`);
+        if (!response.ok) throw new Error('Failed to load TTR history');
+        
+        ttrHistoryData = await response.json();
+        renderTtrTable();
+    } catch (error) {
+        console.error('Error loading TTR history:', error);
+        ttrTableBody.innerHTML = '<tr><td colspan="6" style="color: red; padding: 20px;">Error loading history. Try refreshing.</td></tr>';
+    }
+}
+
+/**
+ * Render TTR History Table (Read-Only)
+ */
+function renderTtrTable() {
+    const weeks = Object.keys(ttrHistoryData).sort().reverse();
+    
+    if (weeks.length === 0) {
+        ttrTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No historical data available</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    
+    for (const week of weeks) {
+        const weekData = ttrHistoryData[week];
+        html += `
+            <tr>
+                <td class="ttr-week-label">${week}</td>
+        `;
+        
+        for (const day of days) {
+            const value = weekData[day] !== undefined ? weekData[day] : '-';
+            const displayValue = value === '-' ? '-' : `${value}%`;
+            
+            html += `
+                <td>${displayValue}</td>
+            `;
+        }
+        
+        html += '</tr>';
+    }
+    
+    ttrTableBody.innerHTML = html;
+}
+
+// Add event listeners to modal buttons
+showTtrBtn.addEventListener('click', openTtrModal);
+closeModalBtn.addEventListener('click', closeTtrModal);
+closeTtrBtn.addEventListener('click', closeTtrModal);
+
+// Close modal when clicking outside
+ttrModal.addEventListener('click', (e) => {
+    if (e.target === ttrModal) {
+        closeTtrModal();
+    }
+});
+
 /**
  * Initialize dashboard on page load
  */

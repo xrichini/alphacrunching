@@ -206,6 +206,24 @@ def get_latest_metrics():
     })
 
 
+@app.route("/api/ttr-history", methods=["GET"])
+def get_ttr_history():
+    """
+    GET /api/ttr-history
+    Returns TTR history (read-only) organized by week.
+    Format: {"2026-06-17": {"monday": 75, "tuesday": 0, ...}, ...}
+    """
+    data_dir = Path(__file__).parent.parent / "data"
+    ttr_weekly_file = data_dir / "ttr_weekly_history.json"
+    
+    if ttr_weekly_file.exists():
+        with open(ttr_weekly_file) as f:
+            ttr_weekly = json.load(f)
+        return jsonify(ttr_weekly)
+    
+    return jsonify({}), 404
+
+
 if __name__ == "__main__":
     print("Starting Flask server at http://localhost:5000")
     app.run(debug=True, port=5000)
