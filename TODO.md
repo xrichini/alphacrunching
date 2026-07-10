@@ -2,9 +2,13 @@
 
 ## Up Next
 
+
 ## Blocked
 
 ## Done (recent)
+
+- [x] Check WTR and TTR history. Current values for upcoming week are not added to history. Week shall start on Mondays.
+  - History now appends current WTR/TTR under next Monday key on each run/refresh (skip if week already exists); cleared stale dev data; 8-week lookback for trend analysis; N/A displayed for missing/null values in frontend
 - [x] End-to-end integration test
   - Dashboard loads at http://localhost:5000 with correctly selected week and WTR bars displaying 100% for Jun 8, 2026; Flask server running; all 3 trade signals showing "Go"
 - [x] Add styling and interactivity

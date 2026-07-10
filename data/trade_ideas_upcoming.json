@@ -1,1 +1,79 @@
-{}
+{
+  "generated_at": "2026-07-10T23:31:17.779958",
+  "next_week_start": "2026-07-13",
+  "latest_wtr": {
+    "monday": 40,
+    "tuesday": 71,
+    "wednesday": 50,
+    "thursday": 62,
+    "friday": 75
+  },
+  "latest_ttr": {
+    "monday": 29,
+    "tuesday": 25,
+    "wednesday": 89,
+    "thursday": 56,
+    "friday": 83
+  },
+  "prev_wtr": {},
+  "prev_ttr": {},
+  "trade_ideas": [
+    {
+      "day": "Monday",
+      "strategy": "7DTE ATM Bull Put Spread",
+      "entry_time": "3:30pm ET",
+      "expiration": "7DTE",
+      "credit_target": "$2.00 (5pt wide)",
+      "sma_check": "5sma > 10sma (30m before close)",
+      "wtr_ttr": "WTR: 40%",
+      "signal": "No Go",
+      "reason": "WTR 40% < 50%"
+    },
+    {
+      "day": "Tuesday",
+      "strategy": "7DTE ATM Bull Put Spread",
+      "entry_time": "3:30pm ET",
+      "expiration": "7DTE",
+      "credit_target": "$2.00 (5pt wide)",
+      "sma_check": "5sma > 10sma (30m before close)",
+      "wtr_ttr": "WTR: 71%",
+      "signal": "Go",
+      "reason": "WTR 71% \u2265 50%"
+    },
+    {
+      "day": "Wednesday",
+      "strategy": "1DTE ATM Bull Put Spread",
+      "entry_time": "3:45pm ET",
+      "expiration": "1DTE",
+      "credit_target": "$2.00 (5pt wide)",
+      "sma_check": "SPX > 20sma (15m before close)",
+      "wtr_ttr": "TTR: 89%",
+      "signal": "Go",
+      "reason": "TTR 89% \u2265 60% and ",
+      "trend_check": "N/A"
+    },
+    {
+      "day": "Thursday",
+      "strategy": "7DTE ATM Bull Put Spread",
+      "entry_time": "3:30pm ET",
+      "expiration": "7DTE",
+      "credit_target": "$2.00 (5pt wide)",
+      "sma_check": "5sma > 10sma (30m before close)",
+      "wtr_ttr": "WTR: 62%",
+      "signal": "Go",
+      "reason": "WTR 62% \u2265 50%"
+    },
+    {
+      "day": "Friday",
+      "strategy": "3DTE ATM Bull Put Spread",
+      "entry_time": "3:45pm ET",
+      "expiration": "3DTE",
+      "credit_target": "$2.00 (5pt wide)",
+      "sma_check": "SPX > 20sma (15m before close)",
+      "wtr_ttr": "TTR: 83%",
+      "signal": "Go",
+      "reason": "TTR 83% \u2265 60% and ",
+      "trend_check": "N/A"
+    }
+  ]
+}

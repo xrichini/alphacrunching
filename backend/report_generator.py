@@ -18,6 +18,8 @@ from metrics_calculator import (
     save_metrics,
     save_wtr_weekly_history,
     save_ttr_weekly_history,
+    get_next_monday,
+    append_weekly_history,
 )
 
 
@@ -50,8 +52,11 @@ def compute_and_save_metrics():
         
         print("[COMPUTE] Saving metrics to JSON files...")
         save_metrics(wtr, ttr, {})
-        save_wtr_weekly_history(wtr_weekly)
-        save_ttr_weekly_history(ttr_weekly)
+        
+        # Append current week to history (skip if already exists)
+        week_key = get_next_monday()
+        append_weekly_history("wtr_weekly_history.json", week_key, wtr)
+        append_weekly_history("ttr_weekly_history.json", week_key, ttr)
         print("[COMPUTE] Metrics saved!")
         
         return {

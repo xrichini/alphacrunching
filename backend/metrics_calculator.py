@@ -8,6 +8,55 @@ from typing import Dict, List, Tuple
 import pandas as pd
 
 
+def get_next_monday() -> str:
+    """Return next Monday's date as YYYY-MM-DD string (week-of key for history)."""
+    today = datetime.now().date()
+    days_until_monday = (7 - today.weekday()) % 7
+    if days_until_monday == 0:
+        days_until_monday = 7
+    next_monday = today + timedelta(days=days_until_monday)
+    return next_monday.strftime("%Y-%m-%d")
+
+
+def append_weekly_history(filename: str, week_key: str, values: Dict) -> bool:
+    """
+    Append a week's values to a history JSON file. Skip if week_key already exists.
+    Uses relative 'data/' path (run from project root).
+    Returns True if appended, False if skipped.
+    """
+    data_dir = Path("data")
+    data_dir.mkdir(exist_ok=True)
+    filepath = data_dir / filename
+    
+    history = {}
+    if filepath.exists():
+        with open(filepath) as f:
+            history = json.load(f)
+    
+    if week_key in history:
+        print(f"Week {week_key} already in {filename}, skipping")
+        return False
+    
+    history[week_key] = values
+    with open(filepath, "w") as f:
+        json.dump(history, f, indent=2)
+    print(f"Appended week {week_key} to {filename}")
+    return True
+
+
+def load_weekly_history(filepath, num_weeks: int = 8) -> Dict:
+    """
+    Load weekly history from JSON file, returning the last N weeks sorted descending.
+    Accepts a full path (e.g. from Path(__file__).parent.parent / "data" / ...).
+    """
+    history = {}
+    if Path(filepath).exists():
+        with open(filepath) as f:
+            history = json.load(f)
+    sorted_keys = sorted(history.keys(), reverse=True)[:num_weeks]
+    return {k: history[k] for k in sorted_keys}
+
+
 def calculate_wtr_for_lookback(df: pd.DataFrame, lookback_weeks: int = 8) -> Dict[str, int]:
     """
     Calculate WTR over entire lookback period (8 weeks ≈ 2 months).
@@ -41,7 +90,7 @@ def calculate_wtr_for_lookback(df: pd.DataFrame, lookback_weeks: int = 8) -> Dic
                 if future_close > current_close:
                     wtr_counts[weekday_name]["up"] += 1
     
-    # Calculate percentages
+    # Calculate percentages (None when no data pairs available)
     wtr_result = {}
     for weekday_name in weekday_names:
         total = wtr_counts[weekday_name]["total"]
@@ -50,7 +99,7 @@ def calculate_wtr_for_lookback(df: pd.DataFrame, lookback_weeks: int = 8) -> Dic
         if total > 0:
             wtr_result[weekday_name] = int(round(up / total * 100))
         else:
-            wtr_result[weekday_name] = 0
+            wtr_result[weekday_name] = None
     
     return wtr_result
 
@@ -109,7 +158,7 @@ def calculate_wtr_weekly_history(df: pd.DataFrame, num_weeks: int = 8) -> Dict[s
                     if future_close > current_close:
                         wtr_counts[weekday_name]["up"] += 1
         
-        # Calculate percentages
+        # Calculate percentages (None when no data pairs available)
         week_key = week_end.strftime("%Y-%m-%d")
         wtr_result = {}
         for weekday_name in weekday_names:
@@ -119,7 +168,7 @@ def calculate_wtr_weekly_history(df: pd.DataFrame, num_weeks: int = 8) -> Dict[s
             if total > 0:
                 wtr_result[weekday_name] = int(round(up / total * 100))
             else:
-                wtr_result[weekday_name] = 0
+                wtr_result[weekday_name] = None
         
         weeks_data[week_key] = wtr_result
     
@@ -174,7 +223,7 @@ def calculate_ttr_for_lookback(df: pd.DataFrame, lookback_weeks: int = 8) -> Dic
                 if future_close > current_close:
                     ttr_counts[weekday_name]["up"] += 1
     
-    # Calculate percentages
+    # Calculate percentages (None when no data pairs available)
     ttr_result = {}
     for weekday_name in weekday_names:
         total = ttr_counts[weekday_name]["total"]
@@ -183,7 +232,7 @@ def calculate_ttr_for_lookback(df: pd.DataFrame, lookback_weeks: int = 8) -> Dic
         if total > 0:
             ttr_result[weekday_name] = int(round(up / total * 100))
         else:
-            ttr_result[weekday_name] = 0
+            ttr_result[weekday_name] = None
     
     return ttr_result
 
@@ -255,7 +304,7 @@ def calculate_ttr_weekly_history(df: pd.DataFrame, num_weeks: int = 8) -> Dict[s
                     if future_close > current_close:
                         ttr_counts[weekday_name]["up"] += 1
         
-        # Calculate percentages
+        # Calculate percentages (None when no data pairs available)
         week_key = week_end.strftime("%Y-%m-%d")
         ttr_result = {}
         for weekday_name in weekday_names:
@@ -265,7 +314,7 @@ def calculate_ttr_weekly_history(df: pd.DataFrame, num_weeks: int = 8) -> Dict[s
             if total > 0:
                 ttr_result[weekday_name] = int(round(up / total * 100))
             else:
-                ttr_result[weekday_name] = 0
+                ttr_result[weekday_name] = None
         
         weeks_data[week_key] = ttr_result
     
@@ -310,6 +359,10 @@ def generate_trade_ideas(
         List of trade idea dicts with detailed Go/No-Go reasons
     """
     ideas = []
+    
+    # Defensive: treat None (no data) as 0
+    wtr_value = wtr_value or 0
+    ttr_value = ttr_value or 0
     
     if day_of_week == "monday":
         # Mon 7DTE: WTR >= 50% → Bull Put Spread, 7DTE, 3:30pm ET, check 5sma > 10sma
@@ -473,15 +526,9 @@ def generate_upcoming_trade_ideas(
         if len(ttr_weeks) > 1:
             prev_ttr = ttr_weekly.get(ttr_weeks[1], {})
     
-    # Determine next trading week start date
+    # Determine next trading week start date (next Monday)
     if next_trading_day is None:
-        today = datetime.now().date()
-        # Find next Monday
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_monday = today + timedelta(days=days_until_monday)
-        next_week_start = next_monday.strftime("%Y-%m-%d")
+        next_week_start = get_next_monday()
     else:
         next_week_start = None
     
@@ -566,4 +613,10 @@ if __name__ == "__main__":
     ideas = generate_upcoming_trade_ideas(wtr, ttr)
     
     save_metrics(wtr, ttr, ideas)
+    
+    # Append current week to history (skip if already exists)
+    week_key = get_next_monday()
+    append_weekly_history("wtr_weekly_history.json", week_key, wtr)
+    append_weekly_history("ttr_weekly_history.json", week_key, ttr)
+    
     print("✓ Metrics calculation completed")

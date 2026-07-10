@@ -23,6 +23,9 @@ from metrics_calculator import (
     save_wtr_weekly_history,
     save_ttr_weekly_history,
     get_latest_metrics as calculate_latest_metrics,
+    get_next_monday,
+    append_weekly_history,
+    load_weekly_history,
 )
 
 
@@ -30,7 +33,7 @@ app = Flask(__name__, static_folder="../frontend", static_url_path="")
 
 
 def load_or_compute_metrics():
-    """Load metrics from files or compute if missing."""
+    """Load metrics from files or compute if missing. Append to weekly history."""
     data_dir = Path(__file__).parent.parent / "data"
     
     wtr_file = data_dir / "wtr_history.json"
@@ -38,36 +41,29 @@ def load_or_compute_metrics():
     wtr_weekly_file = data_dir / "wtr_weekly_history.json"
     ttr_weekly_file = data_dir / "ttr_weekly_history.json"
     
-    # If files exist, load them
+    # If WTR/TTR files exist, load them
     if wtr_file.exists() and ttr_file.exists():
         with open(wtr_file) as f:
             wtr = json.load(f)
         with open(ttr_file) as f:
             ttr = json.load(f)
-        
-        # Load weekly histories if available
-        wtr_weekly = {}
-        ttr_weekly = {}
-        if wtr_weekly_file.exists():
-            with open(wtr_weekly_file) as f:
-                wtr_weekly = json.load(f)
-        if ttr_weekly_file.exists():
-            with open(ttr_weekly_file) as f:
-                ttr_weekly = json.load(f)
-        
-        return wtr, ttr, wtr_weekly, ttr_weekly
+    else:
+        # Otherwise compute from scratch
+        print("Computing metrics from scratch...")
+        spx_df = fetch_spx_data(lookback_days=120)
+        wtr = calculate_wtr(spx_df)
+        ttr = calculate_ttr(spx_df)
+        save_metrics(wtr, ttr, {})
     
-    # Otherwise compute from scratch
-    print("Computing metrics from scratch...")
-    spx_df = fetch_spx_data(lookback_days=120)
-    wtr = calculate_wtr(spx_df)
-    ttr = calculate_ttr(spx_df)
-    wtr_weekly = calculate_wtr_weekly_history(spx_df)
-    ttr_weekly = calculate_ttr_weekly_history(spx_df)
+    # Append current week to history (skip if already exists)
+    week_key = get_next_monday()
+    append_weekly_history("wtr_weekly_history.json", week_key, wtr)
+    append_weekly_history("ttr_weekly_history.json", week_key, ttr)
     
-    save_metrics(wtr, ttr, {})
-    save_wtr_weekly_history(wtr_weekly)
-    save_ttr_weekly_history(ttr_weekly)
+    # Load history (last 8 weeks) for trend analysis
+    wtr_weekly = load_weekly_history(wtr_weekly_file, num_weeks=8)
+    ttr_weekly = load_weekly_history(ttr_weekly_file, num_weeks=8)
+    
     return wtr, ttr, wtr_weekly, ttr_weekly
 
 
@@ -142,17 +138,21 @@ def refresh_data():
         wtr = calculate_wtr(spx_df)
         ttr = calculate_ttr(spx_df)
         
-        # Compute weekly histories
-        wtr_weekly = calculate_wtr_weekly_history(spx_df)
-        ttr_weekly = calculate_ttr_weekly_history(spx_df)
+        # Append current week to history (skip if already exists)
+        week_key = get_next_monday()
+        append_weekly_history("wtr_weekly_history.json", week_key, wtr)
+        append_weekly_history("ttr_weekly_history.json", week_key, ttr)
+        
+        # Load history (last 8 weeks) for trend analysis
+        data_dir = Path(__file__).parent.parent / "data"
+        wtr_weekly = load_weekly_history(data_dir / "wtr_weekly_history.json", num_weeks=8)
+        ttr_weekly = load_weekly_history(data_dir / "ttr_weekly_history.json", num_weeks=8)
         
         # Generate trade ideas with weekly histories
         ideas = generate_upcoming_trade_ideas(wtr, ttr, wtr_weekly, ttr_weekly)
         
-        # Save all
+        # Save current metrics
         save_metrics(wtr, ttr, ideas)
-        save_wtr_weekly_history(wtr_weekly)
-        save_ttr_weekly_history(ttr_weekly)
         
         # Update in-memory cache
         WTR_DATA = wtr
@@ -210,18 +210,14 @@ def get_latest_metrics():
 def get_ttr_history():
     """
     GET /api/ttr-history
-    Returns TTR history (read-only) organized by week.
+    Returns TTR history (read-only) organized by week, last 8 weeks.
     Format: {"2026-06-17": {"monday": 75, "tuesday": 0, ...}, ...}
     """
     data_dir = Path(__file__).parent.parent / "data"
     ttr_weekly_file = data_dir / "ttr_weekly_history.json"
     
-    if ttr_weekly_file.exists():
-        with open(ttr_weekly_file) as f:
-            ttr_weekly = json.load(f)
-        return jsonify(ttr_weekly)
-    
-    return jsonify({}), 404
+    ttr_weekly = load_weekly_history(ttr_weekly_file, num_weeks=8)
+    return jsonify(ttr_weekly)
 
 
 if __name__ == "__main__":

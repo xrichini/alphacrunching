@@ -55,6 +55,9 @@ async function fetchLatestMetrics() {
  * Get trend arrow and color based on current vs previous value
  */
 function getTrendArrow(current, previous) {
+    if (current === null || current === undefined) {
+        return { arrow: '—', color: '#999', title: 'No data' };
+    }
     if (previous === null || previous === undefined) {
         return { arrow: '—', color: '#999', title: 'No previous data' };
     }
@@ -77,18 +80,20 @@ function displayMetrics(type, metricsData, prevMetricsData = {}) {
     
     let html = '';
     for (const day of days) {
-        const value = metricsData[day] || 0;
+        const value = metricsData[day];
+        const hasValue = value !== null && value !== undefined;
+        const displayValue = hasValue ? value : null;
         const prevValue = prevMetricsData ? prevMetricsData[day] : null;
-        const color = getMetricColor(value);
+        const color = getMetricColor(displayValue);
         const dayLabel = day.charAt(0).toUpperCase() + day.slice(1);
         
         // Get trend arrow
-        const trend = getTrendArrow(value, prevValue);
+        const trend = getTrendArrow(displayValue, prevValue);
         
         html += `
             <div class="metric-value">
                 <div class="metric-value-label">${dayLabel}</div>
-                <div class="metric-value-number" style="color: ${color}">${value}%</div>
+                <div class="metric-value-number" style="color: ${color}">${hasValue ? value + '%' : 'N/A'}</div>
                 <div class="metric-value-trend" style="color: ${trend.color};" title="${trend.title}">${trend.arrow}</div>
             </div>
         `;
@@ -101,6 +106,7 @@ function displayMetrics(type, metricsData, prevMetricsData = {}) {
  * Get color based on percentage
  */
 function getMetricColor(percentage) {
+    if (percentage === null || percentage === undefined) return '#999';
     if (percentage >= 60) return '#16a34a'; // green - strong signal
     if (percentage >= 50) return '#2563eb'; // blue - moderate signal
     if (percentage >= 40) return '#eab308'; // yellow - weak signal
@@ -281,8 +287,8 @@ function renderTtrTable() {
         `;
         
         for (const day of days) {
-            const value = weekData[day] !== undefined ? weekData[day] : '-';
-            const displayValue = value === '-' ? '-' : `${value}%`;
+            const value = weekData[day];
+            const displayValue = (value === null || value === undefined) ? 'N/A' : `${value}%`;
             
             html += `
                 <td>${displayValue}</td>
