@@ -15,11 +15,13 @@ from metrics_calculator import (
     calculate_ttr,
     calculate_wtr_weekly_history,
     calculate_ttr_weekly_history,
+    generate_upcoming_trade_ideas,
     save_metrics,
     save_wtr_weekly_history,
     save_ttr_weekly_history,
     get_next_monday,
     append_weekly_history,
+    load_weekly_history,
 )
 
 
@@ -283,26 +285,64 @@ def generate_html_report(metrics):
     return html
 
 
-def generate_text_report(metrics):
+def get_trend_arrow(current, previous):
+    if current is None or previous is None:
+        return chr(8212)
+    if current > previous:
+        return chr(8593)
+    if current < previous:
+        return chr(8595)
+    return chr(8594)
+
+
+def generate_text_report(metrics, trade_ideas=None):
     """Generate plaintext report for Telegram"""
     if not metrics:
         return None
     
     wtr = metrics.get("wtr", {})
     ttr = metrics.get("ttr", {})
-    
-    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-    
-    wtr_text = "\n".join([
-        f"  {day}: {wtr.get(day.lower(), 'N/A')}%"
-        for day in days
-    ])
-    
-    ttr_text = "\n".join([
-        f"  {day}: {ttr.get(day.lower(), 'N/A')}%"
-        for day in days
-    ])
-    
+    wtr_weekly = metrics.get("wtr_weekly", {})
+    ttr_weekly = metrics.get("ttr_weekly", {})
+
+    wtr_weeks = sorted(wtr_weekly.keys(), reverse=True)
+    ttr_weeks = sorted(ttr_weekly.keys(), reverse=True)
+    prev_wtr = wtr_weekly.get(wtr_weeks[1], {}) if len(wtr_weeks) > 1 else {}
+    prev_ttr = ttr_weekly.get(ttr_weeks[1], {}) if len(ttr_weeks) > 1 else {}
+
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    day_labels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
+    wtr_lines = []
+    ttr_lines = []
+    for i, day in enumerate(days):
+        w_cur = wtr.get(day)
+        w_prev = prev_wtr.get(day)
+        w_arrow = get_trend_arrow(w_cur, w_prev)
+        w_prev_txt = f" (prev {w_prev}%)" if w_prev is not None else ""
+        wtr_lines.append(f"  {day_labels[i]}: {w_cur if w_cur is not None else 'N/A'}% {w_arrow}{w_prev_txt}")
+
+        t_cur = ttr.get(day)
+        t_prev = prev_ttr.get(day)
+        t_arrow = get_trend_arrow(t_cur, t_prev)
+        t_prev_txt = f" (prev {t_prev}%)" if t_prev is not None else ""
+        ttr_lines.append(f"  {day_labels[i]}: {t_cur if t_cur is not None else 'N/A'}% {t_arrow}{t_prev_txt}")
+
+    wtr_text = "\n".join(wtr_lines)
+    ttr_text = "\n".join(ttr_lines)
+
+    trade_text = ""
+    if trade_ideas:
+        trade_lines = []
+        for idea in trade_ideas:
+            day = idea.get("day", "")
+            signal = idea.get("signal", "")
+            reason = idea.get("reason", "")
+            icon = chr(9989) if signal == "Go" else chr(10060)
+            trade_lines.append(f"{icon} {day}: {signal} \u2014 {reason}")
+        if trade_lines:
+            trade_text = "\n" + "\n".join(trade_lines)
+
     report = f"""[REPORT] *SPX WTR/TTR Weekly Report*
 Generated: {datetime.now().strftime('%A, %B %d, %Y')}
 
@@ -310,20 +350,21 @@ Generated: {datetime.now().strftime('%A, %B %d, %Y')}
 _% of times SPX closed higher 7 days later_
 {wtr_text}
 
-⏭️ *Tomorrow's Triumph Rate (TTR)*
-_% of times SPX closed higher next day_
+{chr(9199)} *Tomorrow's Triumph Rate (TTR)*
+_% of times SPX closed higher next trading day_
 {ttr_text}
 
-💡 *This Week's Trading Signals*
-🔵 Mon/Thu (7DTE): WTR ≥ 50%
-🟠 Wed (1DTE): TTR ≥ 60% + Trend Check
-🟣 Fri (3DTE): TTR ≥ 60% + Trend Check
+{chr(128161)} *Trade Signals*
+{chr(128309)} Mon/Thu (7DTE): WTR {chr(8805)} 50%
+{chr(128992)} Wed (1DTE): TTR {chr(8805)} 60% + Trend Check
+{chr(128995)} Fri (3DTE): TTR {chr(8805)} 60% + Trend Check
+{trade_text}
 
-📌 All strategies: ATM Bull Put Spreads with $2.00+ credit targets
+{chr(128204)} All strategies: ATM Bull Put Spreads with $2.00+ credit targets
 
-[REPORT] Full Dashboard:
+Full dashboard:
 https://xrichini.github.io/alphacrunching/"""
-    
+
     return report
 
 
@@ -413,7 +454,21 @@ if __name__ == "__main__":
         print(f"[MAIN] [OK] Metrics loaded successfully!")
         print(f"[MAIN]   WTR: {metrics.get('wtr')}")
         print(f"[MAIN]   TTR: {metrics.get('ttr')}")
-        
+
+        # STEP 1.5: Compute trade ideas with trend analysis
+        print("\n[MAIN] STEP 1.5: Computing trade ideas with trend analysis...")
+        wtr_weekly = load_weekly_history(
+            Path(__file__).parent.parent / "data" / "wtr_weekly_history.json", num_weeks=8
+        )
+        ttr_weekly = load_weekly_history(
+            Path(__file__).parent.parent / "data" / "ttr_weekly_history.json", num_weeks=8
+        )
+        ideas_dict = generate_upcoming_trade_ideas(
+            metrics["wtr"], metrics["ttr"], wtr_weekly, ttr_weekly
+        )
+        trade_ideas = ideas_dict.get("trade_ideas", [])
+        print(f"[MAIN]   Generated {len(trade_ideas)} trade ideas")
+
         # STEP 2: Generate HTML report
         print("\n[MAIN] STEP 2: Generating HTML report...")
         html = generate_html_report(metrics)
@@ -421,9 +476,9 @@ if __name__ == "__main__":
             print("[MAIN] ERROR: Failed to generate HTML")
             sys.exit(1)
         
-        # STEP 3: Generate Telegram text
-        print("[MAIN] STEP 3: Generating Telegram message...")
-        text = generate_text_report(metrics)
+        # STEP 3: Generate Telegram text with trade signals
+        print("[MAIN] STEP 3: Generating Telegram message with trade signals...")
+        text = generate_text_report(metrics, trade_ideas)
         if not text:
             print("[MAIN] ERROR: Failed to generate text")
             sys.exit(1)
