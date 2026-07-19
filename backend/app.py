@@ -220,6 +220,20 @@ def get_ttr_history():
     return jsonify(ttr_weekly)
 
 
+@app.route("/api/wtr-history", methods=["GET"])
+def get_wtr_history():
+    """
+    GET /api/wtr-history
+    Returns WTR history (read-only) organized by week, last 8 weeks.
+    Format: {"2026-06-17": {"monday": 60, "tuesday": 0, ...}, ...}
+    """
+    data_dir = Path(__file__).parent.parent / "data"
+    wtr_weekly_file = data_dir / "wtr_weekly_history.json"
+
+    wtr_weekly = load_weekly_history(wtr_weekly_file, num_weeks=8)
+    return jsonify(wtr_weekly)
+
+
 if __name__ == "__main__":
     print("Starting Flask server at http://localhost:5000")
     app.run(debug=True, port=5000)

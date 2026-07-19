@@ -313,6 +313,82 @@ ttrModal.addEventListener('click', (e) => {
     }
 });
 
+// WTR History Modal - Get elements
+const wtrModal = document.getElementById('wtrModal');
+const showWtrBtn = document.getElementById('showWtrBtn');
+const closeWtrModalBtn = document.getElementById('closeWtrModalBtn');
+const closeWtrBtn = document.getElementById('closeWtrBtn');
+const wtrTableBody = document.getElementById('wtrTableBody');
+
+let wtrHistoryData = {};
+
+function openWtrModal() {
+    wtrModal.classList.add('show');
+    loadWtrHistory();
+}
+
+function closeWtrModal() {
+    wtrModal.classList.remove('show');
+}
+
+async function loadWtrHistory() {
+    try {
+        const response = await fetch(`${API_BASE}/wtr-history`);
+        if (!response.ok) throw new Error('Failed to load WTR history');
+
+        wtrHistoryData = await response.json();
+        renderWtrTable();
+    } catch (error) {
+        console.error('Error loading WTR history:', error);
+        wtrTableBody.innerHTML = '<tr><td colspan="6" style="color: red; padding: 20px;">Error loading history. Try refreshing.</td></tr>';
+    }
+}
+
+function renderWtrTable() {
+    const weeks = Object.keys(wtrHistoryData).sort().reverse();
+
+    if (weeks.length === 0) {
+        wtrTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No historical data available</td></tr>';
+        return;
+    }
+
+    let html = '';
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+
+    for (const week of weeks) {
+        const weekData = wtrHistoryData[week];
+        html += `
+            <tr>
+                <td class="ttr-week-label">${week}</td>
+        `;
+
+        for (const day of days) {
+            const value = weekData[day];
+            const displayValue = (value === null || value === undefined) ? 'N/A' : `${value}%`;
+
+            html += `
+                <td>${displayValue}</td>
+            `;
+        }
+
+        html += '</tr>';
+    }
+
+    wtrTableBody.innerHTML = html;
+}
+
+// Add event listeners to WTR modal buttons
+showWtrBtn.addEventListener('click', openWtrModal);
+closeWtrModalBtn.addEventListener('click', closeWtrModal);
+closeWtrBtn.addEventListener('click', closeWtrModal);
+
+// Close modal when clicking outside
+wtrModal.addEventListener('click', (e) => {
+    if (e.target === wtrModal) {
+        closeWtrModal();
+    }
+});
+
 /**
  * Initialize dashboard on page load
  */

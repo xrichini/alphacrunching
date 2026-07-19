@@ -327,6 +327,68 @@ https://xrichini.github.io/alphacrunching/"""
     return report
 
 
+def generate_chart_image(metrics, output_path):
+    """Generate a bar chart image of WTR/TTR values matching the frontend style."""
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as mpatches
+    except ImportError:
+        print("[CHART] matplotlib not available, skipping chart generation")
+        return None
+
+    wtr = metrics.get("wtr", {})
+    ttr = metrics.get("ttr", {})
+
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    day_keys = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+
+    wtr_vals = [wtr.get(d, None) for d in day_keys]
+    ttr_vals = [ttr.get(d, None) for d in day_keys]
+
+    def get_color(val):
+        if val is None:
+            return "#999999"
+        if val >= 60:
+            return "#16a34a"
+        if val >= 50:
+            return "#2563eb"
+        if val >= 40:
+            return "#eab308"
+        return "#ea580c"
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#f9fafb')
+
+    for ax, values, title, color_key in [
+        (ax1, wtr_vals, "Weekly Triumph Rate (WTR)", "WTR"),
+        (ax2, ttr_vals, "Tomorrow's Triumph Rate (TTR)", "TTR"),
+    ]:
+        colors = [get_color(v) for v in values]
+        bars = ax.bar(days, [v if v is not None else 0 for v in values], color=colors, edgecolor='white', linewidth=1.2)
+        ax.set_title(title, fontsize=13, fontweight='bold', pad=12, color='#1f2937')
+        ax.set_ylim(0, 100)
+        ax.set_ylabel("%", fontsize=11)
+        ax.tick_params(axis='x', labelsize=10)
+        ax.tick_params(axis='y', labelsize=9)
+        ax.set_facecolor('#f3f4f6')
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        ax.grid(axis='y', alpha=0.3)
+
+        for bar, val in zip(bars, values):
+            if val is not None:
+                ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2,
+                        f'{val}%', ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+    plt.tight_layout(pad=2)
+    plt.savefig(output_path, dpi=150, bbox_inches='tight', facecolor=fig.get_facecolor())
+    plt.close(fig)
+    print(f"[CHART] Saved chart to {output_path}")
+    return output_path
+
+
 def save_report(html_content, output_path):
     """Save HTML report to file with UTF-8 encoding"""
     output_path = Path(output_path)
@@ -374,7 +436,12 @@ if __name__ == "__main__":
         
         print(f"[MAIN] [OK] HTML report saved to: {output_path}")
         print(f"[MAIN] Report timestamp: {datetime.now().strftime('%A, %B %d, %Y at %H:%M UTC')}")
-        
+
+        # STEP 4.5: Generate chart image
+        print("\n[MAIN] STEP 4.5: Generating chart image...")
+        chart_path = project_root / "docs" / "spx_weekly_chart.png"
+        generate_chart_image(metrics, chart_path)
+
         # STEP 5: Display Telegram message for verification
         print("\n[MAIN] STEP 5: Telegram message (for workflow logs):")
         print("=" * 60)

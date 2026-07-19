@@ -39,7 +39,7 @@ wheels/
 Thumbs.db
 
 # Project specific
-data/*.json
-!data/.gitkeep
+data/spx_history.json
+data/trade_ideas_upcoming.json
 docs/report.html
 *.log

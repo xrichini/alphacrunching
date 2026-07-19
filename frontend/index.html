@@ -18,6 +18,9 @@
                 <span id="refreshText">Refresh Data</span>
                 <span id="refreshSpinner" class="spinner" style="display: none;"></span>
             </button>
+            <button id="showWtrBtn" class="btn btn-secondary">
+                📊 Show WTR History
+            </button>
             <button id="showTtrBtn" class="btn btn-secondary">
                 📊 Show TTR History
             </button>
@@ -100,6 +103,37 @@
             </div>
             <div class="modal-footer">
                 <button id="closeTtrBtn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WTR History Read-Only Modal -->
+    <div id="wtrModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>WTR History (8-Week Rolling)</h2>
+                <button class="modal-close" id="closeWtrModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-info">WTR = % of times SPX closed higher 7 days later for each weekday (calculated from historical data)</p>
+                <table id="wtrHistoryTable" class="ttr-display-table">
+                    <thead>
+                        <tr>
+                            <th>Week of</th>
+                            <th>Monday</th>
+                            <th>Tuesday</th>
+                            <th>Wednesday</th>
+                            <th>Thursday</th>
+                            <th>Friday</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wtrTableBody">
+                        <tr><td colspan="6" style="text-align: center; padding: 20px;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button id="closeWtrBtn" class="btn btn-primary">Close</button>
             </div>
         </div>
     </div>
