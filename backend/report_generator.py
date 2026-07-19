@@ -403,9 +403,9 @@ if __name__ == "__main__":
     print(f"[MAIN] Working directory: {Path.cwd()}")
     
     try:
-        # STEP 1: Load metrics from cache (or compute if missing)
-        print("\n[MAIN] STEP 1: Loading metrics from cache or computing fresh...")
-        metrics = load_metrics()
+        # STEP 1: Compute fresh metrics from yfinance (CI always fetches fresh data)
+        print("\n[MAIN] STEP 1: Computing fresh metrics from yfinance...")
+        metrics = compute_and_save_metrics()
         if not metrics:
             print("[MAIN] ERROR: Failed to load/compute metrics")
             sys.exit(1)
