@@ -12,5 +12,12 @@
     "wednesday": 50,
     "thursday": 62,
     "friday": 75
+  },
+  "2026-07-27": {
+    "monday": 29,
+    "tuesday": 57,
+    "wednesday": 43,
+    "thursday": 50,
+    "friday": 25
   }
 }
