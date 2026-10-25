@@ -103,5 +103,12 @@
     "wednesday": 62,
     "thursday": 62,
     "friday": 25
+  },
+  "2026-10-26": {
+    "monday": 29,
+    "tuesday": 25,
+    "wednesday": 50,
+    "thursday": 62,
+    "friday": 38
   }
 }
