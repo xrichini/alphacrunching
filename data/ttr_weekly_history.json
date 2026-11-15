@@ -124,5 +124,12 @@
     "wednesday": 38,
     "thursday": 62,
     "friday": 57
+  },
+  "2026-11-16": {
+    "monday": 50,
+    "tuesday": 50,
+    "wednesday": 25,
+    "thursday": 50,
+    "friday": 57
   }
 }
